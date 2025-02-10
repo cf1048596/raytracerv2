@@ -16,11 +16,12 @@ use helper::{random_f64, random_f64_range};
 use sphere::Sphere;
 use vec3::Point3;
 use vec3::Vec3;
+use camera::Camera;
 use ray::{HittableList, Scatter};
 
 const IMG_WIDTH: u32 = 200;
 const IMG_HEIGHT: u32 = 112;
-
+const PIXEL_SCALE : u32 = 5;
 
 fn main() -> Result<(), Box<dyn Error>> {
     println!("Hello, world!");
@@ -31,8 +32,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     let window = video_subsystem
         .window(
             "raytracing in one weekend real time",
-            IMG_WIDTH,
-            IMG_HEIGHT,
+            IMG_WIDTH * PIXEL_SCALE,
+            IMG_HEIGHT * PIXEL_SCALE,
         )
         .position_centered()
         .build()
@@ -72,12 +73,41 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
     }
 
+    let material1 = Rc::new(Dielectric::new(1.5));
+    world.add(Rc::new(Sphere::new(Point3::new(0_f64, 1_f64, 0_f64), 1.0, material1)));
+
+    let material2 = Rc::new(Lambertian::new(Color::new(0.4, 0.2, 0.1)));
+    world.add(Rc::new(Sphere::new(Point3::new(-4_f64, 1_f64, 0_f64), 1.0, material2)));
+
+    let material3 = Rc::new(Metal::new(Color::new(0.7, 0.6, 0.5), 0.0));
+    world.add(Rc::new(Sphere::new(Point3::new(4_f64, 1_f64, 0_f64), 1.0, material3)));
+
+    //aspect ratio, img_width, samples_per_pixel, depth, vertical angle fov
+    let mut cam : Camera = Camera::new(16_f64/9_f64, 200, 10, 50, 20_f64);
+
+    cam.lookfrom = Point3::new(13.0,2.0,3.0);
+    cam.lookat   = Point3::new(0.0,0.0,0.0);
+    cam.vup      = Vec3::new(0.0,1.0,0.0);
+    cam.defocus_angle = 0.6;
+    cam.focus_dist = 10.0;
+
     'running: loop {
         let frame_start = std::time::Instant::now();
         for event in event_pump.poll_iter() {
             match event {
-                _ => {},
+                sdl2::event::Event::Quit { .. }
+                | sdl2::event::Event::KeyDown {
+                    keycode: Some(sdl2::keyboard::Keycode::Escape),
+                    ..
+                } => break 'running,
+                sdl2::event::Event::KeyDown { keycode, .. } => {
+                }
+                sdl2::event::Event::KeyUp { keycode, .. } => {
+                }
+                _ => {}
             }
         }
     }
+    Ok(())
+
 }
