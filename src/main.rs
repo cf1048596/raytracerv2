@@ -13,6 +13,7 @@ use color::Color;
 use helper::{random_f64, random_f64_range};
 use material::{Dielectric, Lambertian, Metal};
 use ray::{HittableList, Scatter};
+use sdl2::keyboard;
 use sdl2::pixels::PixelFormatEnum;
 use sphere::Sphere;
 use std::error::Error;
@@ -58,7 +59,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         1.0,
         material1,
     )));
-    let material2 = Rc::new(Lambertian::new(Color::new(0.4, 0.2, 0.1)));
+    let material2 = Rc::new(Lambertian::new(Color::new(1.0_f64, 0.1_f64, 0.1)));
     world.add(Rc::new(Sphere::new(
         Point3::new(-4_f64, 1_f64, 0_f64),
         1.0,
@@ -97,6 +98,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let frame_duration = std::time::Duration::from_millis(33); //33 ms for 30 fps
     let mut rerender_flag: bool = false;
+    let mut mouse_lock: bool = false;
 
     'running: loop {
         let frame_start = std::time::Instant::now();
@@ -151,6 +153,10 @@ fn main() -> Result<(), Box<dyn Error>> {
                                 cam.lookfrom.y(),
                                 cam.lookfrom.z() - 1.0,
                             );
+                        }
+                        Some(sdl2::keyboard::Keycode::L) => {
+                            mouse_lock = !mouse_lock;
+                            sdl_context.mouse().set_relative_mouse_mode(mouse_lock);
                         }
                         _ => {}
                     }
