@@ -9,6 +9,7 @@ mod material;
 
 extern crate sdl2;
 use std::error::Error;
+use sdl2::pixels::PixelFormatEnum;
 use std::rc::Rc;
 use color::Color;
 use material::{Lambertian, Dielectric, Metal};
@@ -46,6 +47,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let material_ground = Rc::new(Lambertian::new(Color::new(0.5, 0.5, 0.5)));
     world.add(Rc::new(Sphere::new(Point3::new(0.0, -1000_f64, 0.0), 1000.0, material_ground)));
 
+    /*
     for a in -11..11 {
         for b in -11..11 {
             let choose_mat = random_f64();
@@ -72,6 +74,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             }
         }
     }
+    */
 
     let material1 = Rc::new(Dielectric::new(1.5));
     world.add(Rc::new(Sphere::new(Point3::new(0_f64, 1_f64, 0_f64), 1.0, material1)));
@@ -90,7 +93,17 @@ fn main() -> Result<(), Box<dyn Error>> {
     cam.vup      = Vec3::new(0.0,1.0,0.0);
     cam.defocus_angle = 0.6;
     cam.focus_dist = 10.0;
+    let mut image_vector: Vec<u8> = cam.render(&world);
+        let texture_creator = canvas.texture_creator();
+    let mut texture = texture_creator
+        .create_texture_streaming(PixelFormatEnum::RGB24, IMG_WIDTH, IMG_HEIGHT)
+        .map_err(|e| e.to_owned())?;
 
+    // upload image data to texture 
+    texture.update(None, &image_vector, (IMG_WIDTH * 3) as usize)?;
+    canvas.clear();
+    canvas.copy(&texture, None, None).map_err(|e| e.to_string())?;
+    canvas.present();
     'running: loop {
         let frame_start = std::time::Instant::now();
         for event in event_pump.poll_iter() {

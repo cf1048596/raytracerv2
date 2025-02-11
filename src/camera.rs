@@ -53,29 +53,30 @@ impl Camera {
         }
     }
 
-    pub fn render(&mut self, world : &dyn Hittable) {
-        self.init();
-        
-        //write header to stdout
-        println!("P3");
-        println!("{} {}", self.img_width, self.img_height);
-        println!("255");
-        for y in 0..self.img_height {
+    pub fn render(&mut self, world: &dyn Hittable) -> Vec<u8> {
+      self.init();
+      let mut image = vec![0u8; (self.img_width * self.img_height * 3) as usize]; //rgb buffer
 
-            eprint!("\rScanlines remaining: {}", self.img_height - y);
-            io::stderr().flush().unwrap(); // Ensure the progress is displayed immediately
+      for y in 0..self.img_height {
 
-            for x in 0..self.img_width {
-                let mut pixel_color : Color = Color::new_empty();
-                for sample in 0..self.samples_per_pixel {
-                    let ray = self.get_ray(x, y);
-                    pixel_color += self.ray_color(&ray, world, self.max_depth);
-                }
-                let resultant_color = self.pixels_sample_scale*pixel_color;
-                write_color(&resultant_color);
-            }
+        for x in 0..self.img_width {
+          let mut pixel_color = Color::new_empty();
+          for _ in 0..self.samples_per_pixel {
+            let ray = self.get_ray(x, y);
+            pixel_color += self.ray_color(&ray, world, self.max_depth);
+          }
+          let resultant_color = self.pixels_sample_scale * pixel_color;
+          let rgb = write_color(&resultant_color);
+          let offset = ((y * self.img_width + x) * 3) as usize;
+
+          image[offset] = rgb[0] as u8;
+          image[offset + 1] = rgb[1] as u8;
+          image[offset + 2] = rgb[2] as u8;
         }
-        eprintln!("\rDone");
+      }
+
+      eprintln!("\rDone");
+      image
     }
 
     fn init(&mut self) {
