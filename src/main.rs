@@ -132,6 +132,12 @@ fn main() -> Result<(), Box<dyn Error>> {
                         Some(sdl2::keyboard::Keycode::Right) => {
                             cam.lookfrom = Point3::new(cam.lookfrom.x() + 1.0, cam.lookfrom.y(), cam.lookfrom.z());
                         }
+                        Some(sdl2::keyboard::Keycode::Q) => {
+                            cam.lookfrom = Point3::new(cam.lookfrom.x(), cam.lookfrom.y(), cam.lookfrom.z()+1.0);
+                        }
+                        Some(sdl2::keyboard::Keycode::E) => {
+                            cam.lookfrom = Point3::new(cam.lookfrom.x(), cam.lookfrom.y(), cam.lookfrom.z()-1.0);
+                        }
                         _ => {}
                     }
 
