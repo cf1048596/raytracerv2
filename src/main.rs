@@ -31,6 +31,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let sdl_context = sdl2::init()?;
     let video_subsystem = sdl_context.video()?;
 
+    sdl_context.mouse().set_relative_mouse_mode(true);
     let window = video_subsystem
         .window(
             "raytracing in one weekend real time",
@@ -141,6 +142,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                         _ => {}
                     }
 
+
+
                     // Re-render the scene with the updated camera position
                     image_vector = cam.render(&world);
                     texture.update(None, &image_vector, (IMG_WIDTH * 3) as usize)?;
@@ -148,9 +151,21 @@ fn main() -> Result<(), Box<dyn Error>> {
                     canvas.copy(&texture, None, None).map_err(|e| e.to_string())?;
                     canvas.present();
                 }
-                sdl2::event::Event::KeyUp { .. } => {}
+                sdl2::event::Event::MouseMotion { xrel, yrel, .. } => {
+                    let sensitivity = 0.002; // Adjust this for faster/slower rotation
+                    let yaw = xrel as f64 * sensitivity;
+                    let pitch = -yrel as f64 * sensitivity; // Invert Y so up is up
+                      //cam.rotate(yaw, pitch);
+                    }
+
                 _ => {}
             }
+                //re-render the scene with the updated camera position
+                image_vector = cam.render(&world);
+                texture.update(None, &image_vector, (IMG_WIDTH * 3) as usize)?;
+                canvas.clear();
+                canvas.copy(&texture, None, None).map_err(|e| e.to_string())?;
+                canvas.present();
         }
 
         let elapsed = frame_start.elapsed();

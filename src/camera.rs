@@ -158,4 +158,7 @@ impl Camera {
         let p = random_in_unit_disk();
         self.center + (p.x() * self.defocus_disk_u) + (p.y() * self.defocus_disk_v)
     }
+    pub fn rotate(&self) {
+         todo!()
+    }
 }
