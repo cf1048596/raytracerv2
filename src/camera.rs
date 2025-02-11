@@ -194,16 +194,14 @@ impl Camera {
 
         //convert to spherical coordinates
         //gonna be real idk why there's inverse trig functions here dawg
-        let theta = dir_normalized.z()
-            .atan2(dir_normalized.x());
-        let phi = dir_normalized.y()
-            .asin();
+        let theta = dir_normalized.z().atan2(dir_normalized.x());
+        let phi = dir_normalized.y().asin();
 
         // Apply deltas with clamping
         let new_theta = theta + yaw_delta;
         let new_phi = (phi + pitch_delta).clamp(
             -std::f64::consts::FRAC_PI_2 + 0.001,
-            std::f64::consts::FRAC_PI_2 - 0.001
+            std::f64::consts::FRAC_PI_2 - 0.001,
         );
 
         //convert back to cartesian coordinates
@@ -213,13 +211,13 @@ impl Camera {
         dir_normalized.z = new_theta.sin() * new_phi.cos();
         */
         dir_normalized = Vec3::new(
-            new_theta.cos()*new_phi.cos(),
+            new_theta.cos() * new_phi.cos(),
             new_phi.sin(),
-            new_theta.sin() * new_phi.cos()
-            );
+            new_theta.sin() * new_phi.cos(),
+        );
 
         //update lookat point while maintaining focus distance
-        self.lookat = self.lookfrom + (distance*dir_normalized);
+        self.lookat = self.lookfrom + (distance * dir_normalized);
         // recalculate camera basis vectors
         self.update_basis_vectors();
     }
@@ -276,6 +274,4 @@ impl Camera {
         self.lookfrom += -(speed * right); //left left (opposite of right)
         self.lookat += -(speed * right);
     }
-
-
 }
