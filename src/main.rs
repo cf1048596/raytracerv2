@@ -43,11 +43,12 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut canvas = window.into_canvas().build().map_err(|e| e.to_owned())?;
     let mut event_pump = sdl_context.event_pump()?;
 
-    let frame_duration = std::time::Duration::from_millis(33);
+    let frame_duration = std::time::Duration::from_millis(20);
 
     //map init code
     let mut world: HittableList = HittableList::new();
     let material_ground = Rc::new(Lambertian::new(Color::new(0.5, 0.5, 0.5)));
+
     world.add(Rc::new(Sphere::new(
         Point3::new(0.0, -1000_f64, 0.0),
         1000.0,
@@ -61,13 +62,13 @@ fn main() -> Result<(), Box<dyn Error>> {
     )));
     let material2 = Rc::new(Lambertian::new(Color::new(1.0_f64, 0.1_f64, 0.1)));
     world.add(Rc::new(Sphere::new(
-        Point3::new(-4_f64, 1_f64, 0_f64),
+        Point3::new(-3_f64, 1_f64, 0_f64),
         1.0,
         material2,
     )));
-    let material3 = Rc::new(Metal::new(Color::new(0.7, 0.6, 0.5), 0.0));
+    let material3 = Rc::new(Metal::new(Color::new(0.01, 0.01, 0.3), 0.0));
     world.add(Rc::new(Sphere::new(
-        Point3::new(4_f64, 1_f64, 0_f64),
+        Point3::new(3_f64, 1_f64, 0_f64),
         1.0,
         material3,
     )));
@@ -96,7 +97,6 @@ fn main() -> Result<(), Box<dyn Error>> {
         .map_err(|e| e.to_string())?;
     canvas.present();
 
-    let frame_duration = std::time::Duration::from_millis(33); //33 ms for 30 fps
     let mut rerender_flag: bool = false;
     let mut mouse_lock: bool = false;
 
