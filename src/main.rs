@@ -112,47 +112,17 @@ fn main() -> Result<(), Box<dyn Error>> {
                 sdl2::event::Event::KeyDown { keycode, .. } => {
                     match keycode {
                         // Move the camera with arrow keys
-                        Some(sdl2::keyboard::Keycode::Up) => {
-                            cam.lookfrom = Point3::new(
-                                cam.lookfrom.x(),
-                                cam.lookfrom.y() + 1.0,
-                                cam.lookfrom.z(),
-                            );
+                        Some(sdl2::keyboard::Keycode::W) => {
+                            cam.move_fwd(0.5_f64);
                         }
-                        Some(sdl2::keyboard::Keycode::Down) => {
-                            cam.lookfrom = Point3::new(
-                                cam.lookfrom.x(),
-                                cam.lookfrom.y() - 1.0,
-                                cam.lookfrom.z(),
-                            );
+                        Some(sdl2::keyboard::Keycode::A) => {
+                            cam.move_left(0.5_f64);
                         }
-                        Some(sdl2::keyboard::Keycode::Left) => {
-                            cam.lookfrom = Point3::new(
-                                cam.lookfrom.x() - 1.0,
-                                cam.lookfrom.y(),
-                                cam.lookfrom.z(),
-                            );
+                        Some(sdl2::keyboard::Keycode::S) => {
+                            cam.move_backward(0.5_f64);
                         }
-                        Some(sdl2::keyboard::Keycode::Right) => {
-                            cam.lookfrom = Point3::new(
-                                cam.lookfrom.x() + 1.0,
-                                cam.lookfrom.y(),
-                                cam.lookfrom.z(),
-                            );
-                        }
-                        Some(sdl2::keyboard::Keycode::Q) => {
-                            cam.lookfrom = Point3::new(
-                                cam.lookfrom.x(),
-                                cam.lookfrom.y(),
-                                cam.lookfrom.z() + 1.0,
-                            );
-                        }
-                        Some(sdl2::keyboard::Keycode::E) => {
-                            cam.lookfrom = Point3::new(
-                                cam.lookfrom.x(),
-                                cam.lookfrom.y(),
-                                cam.lookfrom.z() - 1.0,
-                            );
+                        Some(sdl2::keyboard::Keycode::D) => {
+                            cam.move_right(0.5_f64);
                         }
                         Some(sdl2::keyboard::Keycode::L) => {
                             mouse_lock = !mouse_lock;

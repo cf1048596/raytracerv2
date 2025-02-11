@@ -252,4 +252,30 @@ impl Camera {
         self.defocus_disk_u = defocus_radius * self.u;
         self.defocus_disk_v = defocus_radius * self.u;
     }
+
+    pub fn move_fwd(&mut self, speed: f64) {
+        let direction = unit_vector(&(self.lookat - self.lookfrom));
+        self.lookfrom += speed * direction;
+        self.lookat += speed * direction;
+    }
+
+    pub fn move_backward(&mut self, speed: f64) {
+        let direction = unit_vector(&(self.lookat - self.lookfrom)); //forward direction
+        self.lookfrom += -(speed * direction); //move backward (opposite of forward)
+        self.lookat += -(speed * direction);
+    }
+
+    pub fn move_right(&mut self, speed: f64) {
+        let right = unit_vector(&cross(&(self.lookat - self.lookfrom), &self.v)); //right direction (perpendicular to forward and up)
+        self.lookfrom += speed * right;
+        self.lookat += speed * right;
+    }
+
+    pub fn move_left(&mut self, speed: f64) {
+        let right = unit_vector(&cross(&(self.lookat - self.lookfrom), &self.v)); //left direction (perpendicular to forward and up)
+        self.lookfrom += -(speed * right); //left left (opposite of right)
+        self.lookat += -(speed * right);
+    }
+
+
 }
