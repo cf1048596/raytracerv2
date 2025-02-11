@@ -23,6 +23,7 @@ use ray::{HittableList, Scatter};
 const IMG_WIDTH: u32 = 200;
 const IMG_HEIGHT: u32 = 112;
 const PIXEL_SCALE : u32 = 5;
+const MOVEMENT_SCALE: f64 = 20_f64;
 
 fn main() -> Result<(), Box<dyn Error>> {
     println!("Hello, world!");
@@ -116,41 +117,45 @@ fn main() -> Result<(), Box<dyn Error>> {
                     keycode: Some(sdl2::keyboard::Keycode::Escape),
                     ..
                 } => break 'running,
-                sdl2::event::Event::MouseMotion { x, y, .. } => {
-                    let dx = x - prev_mouse_pos.0;
-                    let dy = y - prev_mouse_pos.1;
+                sdl2::event::Event::KeyDown { keycode, .. } => {
+                    match keycode {
+                        // Move the camera with arrow keys
+                        Some(sdl2::keyboard::Keycode::Up) => {
+                            cam.lookfrom = Point3::new(cam.lookfrom.x(), cam.lookfrom.y() + 1.0, cam.lookfrom.z());
+                        }
+                        Some(sdl2::keyboard::Keycode::Down) => {
+                            cam.lookfrom = Point3::new(cam.lookfrom.x(), cam.lookfrom.y() - 1.0, cam.lookfrom.z());
+                        }
+                        Some(sdl2::keyboard::Keycode::Left) => {
+                            cam.lookfrom = Point3::new(cam.lookfrom.x() - 1.0, cam.lookfrom.y(), cam.lookfrom.z());
+                        }
+                        Some(sdl2::keyboard::Keycode::Right) => {
+                            cam.lookfrom = Point3::new(cam.lookfrom.x() + 1.0, cam.lookfrom.y(), cam.lookfrom.z());
+                        }
+                        _ => {}
+                    }
 
-                    // Update camera lookfrom/ lookat based on mouse movement
-                    let sensitivity = 0.05;
-                    cam.lookfrom = Point3::new(
-                        cam.lookfrom.x() + dx as f64 * sensitivity,
-                        cam.lookfrom.y() - dy as f64 * sensitivity,
-                        cam.lookfrom.z(), // keep z constant (or adjust it if needed)
-                    );
-
-                    // update the mouse position
-                    prev_mouse_pos = (x, y);
-
-                    // re render-render with updated camera position
+                    // Re-render the scene with the updated camera position
                     image_vector = cam.render(&world);
                     texture.update(None, &image_vector, (IMG_WIDTH * 3) as usize)?;
                     canvas.clear();
                     canvas.copy(&texture, None, None).map_err(|e| e.to_string())?;
                     canvas.present();
                 }
-                sdl2::event::Event::KeyDown { keycode, .. } => {
-                }
-                sdl2::event::Event::KeyUp { keycode, .. } => {
-                }
+                sdl2::event::Event::KeyUp { .. } => {}
                 _ => {}
             }
         }
 
         let elapsed = frame_start.elapsed();
         if elapsed < frame_duration {
-                std::thread::sleep(frame_duration - elapsed); //sleep to cap the frame rate
+            std::thread::sleep(frame_duration - elapsed); //sleep to cap the frame rate
+        }
     }
-    }
+
+
+
+
     Ok(())
 
 }
