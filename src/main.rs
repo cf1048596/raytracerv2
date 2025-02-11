@@ -86,7 +86,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     world.add(Rc::new(Sphere::new(Point3::new(4_f64, 1_f64, 0_f64), 1.0, material3)));
 
     //aspect ratio, img_width, samples_per_pixel, depth, vertical angle fov
-    let mut cam : Camera = Camera::new(16_f64/9_f64, 200, 10, 50, 20_f64);
+    let mut cam : Camera = Camera::new(16_f64/9_f64, 200, 10, 40, 20_f64);
 
     cam.lookfrom = Point3::new(13.0,2.0,3.0);
     cam.lookat   = Point3::new(0.0,0.0,0.0);
@@ -104,6 +104,9 @@ fn main() -> Result<(), Box<dyn Error>> {
     canvas.clear();
     canvas.copy(&texture, None, None).map_err(|e| e.to_string())?;
     canvas.present();
+
+    let mut prev_mouse_pos = (0, 0);
+    let frame_duration = std::time::Duration::from_millis(33); //33 ms for 30 fps
     'running: loop {
         let frame_start = std::time::Instant::now();
         for event in event_pump.poll_iter() {
@@ -113,6 +116,28 @@ fn main() -> Result<(), Box<dyn Error>> {
                     keycode: Some(sdl2::keyboard::Keycode::Escape),
                     ..
                 } => break 'running,
+                sdl2::event::Event::MouseMotion { x, y, .. } => {
+                    let dx = x - prev_mouse_pos.0;
+                    let dy = y - prev_mouse_pos.1;
+
+                    // Update camera lookfrom/ lookat based on mouse movement
+                    let sensitivity = 0.05;
+                    cam.lookfrom = Point3::new(
+                        cam.lookfrom.x() + dx as f64 * sensitivity,
+                        cam.lookfrom.y() - dy as f64 * sensitivity,
+                        cam.lookfrom.z(), // keep z constant (or adjust it if needed)
+                    );
+
+                    // update the mouse position
+                    prev_mouse_pos = (x, y);
+
+                    // re render-render with updated camera position
+                    image_vector = cam.render(&world);
+                    texture.update(None, &image_vector, (IMG_WIDTH * 3) as usize)?;
+                    canvas.clear();
+                    canvas.copy(&texture, None, None).map_err(|e| e.to_string())?;
+                    canvas.present();
+                }
                 sdl2::event::Event::KeyDown { keycode, .. } => {
                 }
                 sdl2::event::Event::KeyUp { keycode, .. } => {
@@ -120,6 +145,11 @@ fn main() -> Result<(), Box<dyn Error>> {
                 _ => {}
             }
         }
+
+        let elapsed = frame_start.elapsed();
+        if elapsed < frame_duration {
+                std::thread::sleep(frame_duration - elapsed); //sleep to cap the frame rate
+    }
     }
     Ok(())
 
