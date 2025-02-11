@@ -219,8 +219,7 @@ impl Camera {
             );
 
         //update lookat point while maintaining focus distance
-        self.lookat = distance*(self.lookfrom + dir_normalized);
-
+        self.lookat = self.lookfrom + (distance*dir_normalized);
         // recalculate camera basis vectors
         self.update_basis_vectors();
     }
