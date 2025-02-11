@@ -1,8 +1,8 @@
 use crate::helper::{self, INFINITY};
 
 pub struct Interval {
-    pub min : f64,
-    pub max : f64,
+    pub min: f64,
+    pub max: f64,
 }
 
 impl Interval {
@@ -14,10 +14,7 @@ impl Interval {
     }
 
     pub fn new(min: f64, max: f64) -> Self {
-        Self {
-            min,
-            max
-        }
+        Self { min, max }
     }
 
     pub fn size(&self) -> f64 {

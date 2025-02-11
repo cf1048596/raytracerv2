@@ -12,7 +12,6 @@ pub fn random_f64() -> f64 {
     rng.gen::<f64>()
 }
 
-
 pub fn random_f64_range(min: f64, max: f64) -> f64 {
     let mut rng = rand::thread_rng();
     min + (max - min) * rng.gen::<f64>()
