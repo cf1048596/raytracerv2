@@ -163,9 +163,10 @@ fn main() -> Result<(), Box<dyn Error>> {
                     rerender_flag = true;
                 }
                 sdl2::event::Event::MouseMotion { xrel, yrel, .. } => {
-                    let sensitivity = 0.002; //adjust this for faster/slower rotation
+                    let sensitivity = 0.5; //adjust this for faster/slower rotation
                     let yaw = xrel as f64 * sensitivity;
                     let pitch = -yrel as f64 * sensitivity; //invert Y so up is up
+                    cam.adjust_view(yaw, pitch);
                     rerender_flag = true;
                 }
                 _ => {}

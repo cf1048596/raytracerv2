@@ -185,7 +185,72 @@ impl Camera {
         let p = random_in_unit_disk();
         self.center + (p.x() * self.defocus_disk_u) + (p.y() * self.defocus_disk_v)
     }
-    pub fn rotate(&mut self, yaw: f64, pitch: f64) {
-        todo!()
+
+    pub fn adjust_view(&mut self, yaw_delta: f64, pitch_delta: f64) {
+        //calculate current direction vector
+        let direction = self.lookat - self.lookfrom;
+        let distance = direction.get_len();
+        let mut dir_normalized = unit_vector(&direction);
+
+        //convert to spherical coordinates
+        //gonna be real idk why there's inverse trig functions here dawg
+        let theta = dir_normalized.z()
+            .atan2(dir_normalized.x());
+        let phi = dir_normalized.y()
+            .asin();
+
+        // Apply deltas with clamping
+        let new_theta = theta + yaw_delta;
+        let new_phi = (phi + pitch_delta).clamp(
+            -std::f64::consts::FRAC_PI_2 + 0.001,
+            std::f64::consts::FRAC_PI_2 - 0.001
+        );
+
+        //convert back to cartesian coordinates
+        /*
+        dir_normalized.x = new_theta.cos() * new_phi.cos();
+        dir_normalized.y = new_phi.sin();
+        dir_normalized.z = new_theta.sin() * new_phi.cos();
+        */
+        dir_normalized = Vec3::new(
+            new_theta.cos()*new_phi.cos(),
+            new_phi.sin(),
+            new_theta.sin() * new_phi.cos()
+            );
+
+        //update lookat point while maintaining focus distance
+        self.lookat = distance*(self.lookfrom + dir_normalized);
+
+        // recalculate camera basis vectors
+        self.update_basis_vectors();
+    }
+
+    fn update_basis_vectors(&mut self) {
+        //recalculate orthonormal basis
+        self.w = unit_vector(&(self.lookfrom - self.lookat));
+        self.u = unit_vector(&cross(&self.vup, &self.w));
+        self.v = cross(&self.w, &self.u);
+
+        //update viewport parameters
+        let viewport_height = 2.0 * (self.vfov.to_radians() / 2.0).tan();
+        let viewport_width = viewport_height * self.aspect_ratio;
+
+        //calculate horizontal/vertical viewport vectors
+        let viewport_u = viewport_width * self.u;
+        let viewport_v = viewport_height * (-self.v);
+
+        //pixel delta vectors
+        self.pixel_delta_u = viewport_u / self.img_width as f64;
+        self.pixel_delta_v = viewport_v / self.img_height as f64;
+
+        let viewport_upper_left =
+            self.center - (self.focus_dist * self.w) - viewport_u / 2_f64 - viewport_v / 2_f64;
+        self.pixel00_loc =
+            viewport_upper_left + 0.5_f64 * (self.pixel_delta_u + self.pixel_delta_v);
+
+        //update defocus disk basis
+        let defocus_radius: f64 = self.focus_dist * (deg_to_rad(self.defocus_angle / 2_f64).tan());
+        self.defocus_disk_u = defocus_radius * self.u;
+        self.defocus_disk_v = defocus_radius * self.u;
     }
 }
