@@ -13,13 +13,14 @@ use color::Color;
 use helper::{random_f64, random_f64_range};
 use material::{Dielectric, Lambertian, Metal};
 use ray::{HittableList, Scatter};
-use sdl2::keyboard;
 use sdl2::pixels::PixelFormatEnum;
 use sphere::Sphere;
 use std::error::Error;
 use std::rc::Rc;
+use std::sync::mpsc::channel;
 use vec3::Point3;
 use vec3::Vec3;
+use std::env::args;
 
 const IMG_WIDTH: u32 = 200;
 const IMG_HEIGHT: u32 = 112;
@@ -27,6 +28,16 @@ const PIXEL_SCALE: u32 = 5;
 const MOVEMENT_SCALE: f64 = 20_f64;
 
 fn main() -> Result<(), Box<dyn Error>> {
+    let args: Vec<String> = std::env::args()
+        .collect();
+    let port: u32 = args[1].parse().unwrap();
+
+    //our data
+    let (tx_update, rx_update) = channel::<u32>();
+    //other player/client data
+    let (tx_pos_update, rx_pos_update) = channel::<u32>();
+
+
     //sdl initialization code
     let sdl_context = sdl2::init()?;
     let video_subsystem = sdl_context.video()?;
