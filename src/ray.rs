@@ -96,6 +96,9 @@ impl HittableList {
     pub fn add(&mut self, object: Rc<dyn Hittable>) {
         self.objects.push(object);
     }
+    pub fn drop_last(&mut self) {
+        self.objects.pop();
+    }
 }
 
 impl Hittable for HittableList {

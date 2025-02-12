@@ -40,6 +40,9 @@ fn main() -> Result<(), Box<dyn Error>> {
     //other player/client data
     let (tx_pos_update, rx_pos_update) = channel::<(f64, f64, f64)>();
 
+    //other player flag
+    let mut other_player_set = false;
+
     thread::spawn(move || {
         if let Ok(mut stream) = TcpStream::connect("127.0.0.1:".to_owned() + port.as_str()) {
 
@@ -199,8 +202,27 @@ fn main() -> Result<(), Box<dyn Error>> {
             }
         }
 
-        if let Ok(msg) = rx_server.try_recv() {
-            println!("Server: {:?}", msg);
+        if let Ok((x, y, z)) = rx_server.try_recv() {
+            rerender_flag=true;
+            println!("other player coords: {}, {}, {}", x, y, z);
+            if !other_player_set {
+                other_player_set = true;
+
+            let player_material = Rc::new(Metal::new(Color::new(0.01, 0.2, 0.3), 0.0));
+            world.add(Rc::new(Sphere::new(
+                Point3::new(x, y, z),
+                0.5,
+                player_material,
+            )));
+            } else {
+                world.drop_last();
+                let player_material = Rc::new(Metal::new(Color::new(0.01, 0.2, 0.3), 0.0));
+                world.add(Rc::new(Sphere::new(
+                    Point3::new(x, y, z),
+                    0.5,
+                    player_material,
+                )));
+            }
         }
 
         if rerender_flag {
