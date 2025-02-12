@@ -42,9 +42,18 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     thread::spawn(move || {
         if let Ok(mut stream) = TcpStream::connect("127.0.0.1:".to_owned() + port.as_str()) {
+
+            stream.set_nonblocking(true).unwrap();
             println!("connected successfully to server");
             let mut reader = BufReader::new(stream.try_clone().unwrap());
             loop {
+                //send data to server beforehand before asking for updates
+                if let Ok((x, y, z)) = rx_pos_update.try_recv() {
+                    println!("sending to server: {}, {}, {}", x, y, z);
+                    let msg = format!("CAMERA {} {} {}\n", x, y, z);
+                    stream.write_all(msg.as_bytes()).unwrap();
+                } 
+
                 // receive server update
                 // this is really ugly and bad but whatever i wanted uniformity between by channels
                 // :p
@@ -64,22 +73,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                             }
                         }
                     } 
-                }
-                if let Ok((x, y, z)) = rx_pos_update.try_recv() {
-                    println!("sending to server");
-                    let msg = format!("CAMERA {} {} {}\n", x, y, z);
-                    stream.write_all(msg.as_bytes()).unwrap();
-                } else {
-                    println!("no data from channel");
-                }
-            }
-        } else { 
-            loop {
-                // just log camera updates
-                if let Ok((x, y, z)) = rx_pos_update.try_recv() {
-                    let msg = format!("CAMERA {} {} {}\n", x, y, z);
-                    println!("{}", msg);
-                }
+                } 
             }
         }
     });
