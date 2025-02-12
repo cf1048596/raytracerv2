@@ -15,28 +15,74 @@ use material::{Dielectric, Lambertian, Metal};
 use ray::{HittableList, Scatter};
 use sdl2::pixels::PixelFormatEnum;
 use sphere::Sphere;
+use std::env::args;
 use std::error::Error;
+use std::io::{BufRead, BufReader, Write};
+use std::net::{TcpListener, TcpStream};
 use std::rc::Rc;
 use std::sync::mpsc::channel;
+use std::thread;
 use vec3::Point3;
 use vec3::Vec3;
-use std::env::args;
 
 const IMG_WIDTH: u32 = 200;
 const IMG_HEIGHT: u32 = 112;
 const PIXEL_SCALE: u32 = 5;
-const MOVEMENT_SCALE: f64 = 20_f64;
+const MOVEMENT_SCALE: f64 = 0.5_f64;
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let args: Vec<String> = std::env::args()
-        .collect();
-    let port: u32 = args[1].parse().unwrap();
+    let args: Vec<String> = std::env::args().collect();
+    let port: String = args[1].to_owned().trim().to_string();
 
     //our data
-    let (tx_update, rx_update) = channel::<u32>();
-    //other player/client data
-    let (tx_pos_update, rx_pos_update) = channel::<u32>();
+    let (tx_server, rx_server) = channel::<(f64, f64, f64)>();
 
+    //other player/client data
+    let (tx_pos_update, rx_pos_update) = channel::<(f64, f64, f64)>();
+
+    thread::spawn(move || {
+        if let Ok(mut stream) = TcpStream::connect("127.0.0.1:".to_owned() + port.as_str()) {
+            println!("connected successfully to server");
+            let mut reader = BufReader::new(stream.try_clone().unwrap());
+            loop {
+                // receive server update
+                // this is really ugly and bad but whatever i wanted uniformity between by channels
+                // :p
+                let mut response = String::new();
+                if reader.read_line(&mut response).is_ok() {
+                    let response = response.trim();
+                    println!("response from server: {}", response);
+                    if response.starts_with("CAMERA") {
+                        let parts: Vec<&str> = response.split_whitespace().collect();
+                        if parts.len() == 4 {
+                            if let (Ok(x), Ok(y), Ok(z)) = (
+                                parts[1].parse::<f64>(),
+                                parts[2].parse::<f64>(),
+                                parts[3].parse::<f64>(),
+                            ) {
+                                tx_server.send((x, y, z)).unwrap();
+                            }
+                        }
+                    } 
+                }
+                if let Ok((x, y, z)) = rx_pos_update.try_recv() {
+                    println!("sending to server");
+                    let msg = format!("CAMERA {} {} {}\n", x, y, z);
+                    stream.write_all(msg.as_bytes()).unwrap();
+                } else {
+                    println!("no data from channel");
+                }
+            }
+        } else { 
+            loop {
+                // just log camera updates
+                if let Ok((x, y, z)) = rx_pos_update.try_recv() {
+                    let msg = format!("CAMERA {} {} {}\n", x, y, z);
+                    println!("{}", msg);
+                }
+            }
+        }
+    });
 
     //sdl initialization code
     let sdl_context = sdl2::init()?;
@@ -124,16 +170,16 @@ fn main() -> Result<(), Box<dyn Error>> {
                     match keycode {
                         // Move the camera with arrow keys
                         Some(sdl2::keyboard::Keycode::W) => {
-                            cam.move_fwd(0.5_f64);
+                            cam.move_fwd(MOVEMENT_SCALE);
                         }
                         Some(sdl2::keyboard::Keycode::A) => {
-                            cam.move_left(0.5_f64);
+                            cam.move_left(MOVEMENT_SCALE);
                         }
                         Some(sdl2::keyboard::Keycode::S) => {
-                            cam.move_backward(0.5_f64);
+                            cam.move_backward(MOVEMENT_SCALE);
                         }
                         Some(sdl2::keyboard::Keycode::D) => {
-                            cam.move_right(0.5_f64);
+                            cam.move_right(MOVEMENT_SCALE);
                         }
                         Some(sdl2::keyboard::Keycode::L) => {
                             mouse_lock = !mouse_lock;
@@ -142,6 +188,11 @@ fn main() -> Result<(), Box<dyn Error>> {
                         _ => {}
                     }
                     rerender_flag = true;
+                    match tx_pos_update
+                        .send((cam.lookfrom.x(), cam.lookfrom.y(), cam.lookfrom.z())) {
+                            Ok(_) => {println!("channel worked");},
+                            Err(_) => {println!("channel failed");},
+                        }
                 }
                 sdl2::event::Event::MouseMotion { xrel, yrel, .. } => {
                     let sensitivity = 0.01; //adjust this for faster/slower rotation
@@ -152,6 +203,10 @@ fn main() -> Result<(), Box<dyn Error>> {
                 }
                 _ => {}
             }
+        }
+
+        if let Ok(msg) = rx_server.try_recv() {
+            println!("Server: {:?}", msg);
         }
 
         if rerender_flag {

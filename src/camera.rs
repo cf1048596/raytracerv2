@@ -204,12 +204,6 @@ impl Camera {
             std::f64::consts::FRAC_PI_2 - 0.001,
         );
 
-        //convert back to cartesian coordinates
-        /*
-        dir_normalized.x = new_theta.cos() * new_phi.cos();
-        dir_normalized.y = new_phi.sin();
-        dir_normalized.z = new_theta.sin() * new_phi.cos();
-        */
         dir_normalized = Vec3::new(
             new_theta.cos() * new_phi.cos(),
             new_phi.sin(),
