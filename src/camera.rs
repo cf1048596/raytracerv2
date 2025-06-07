@@ -140,7 +140,7 @@ impl Camera {
             let mut attenuation: Color = Color::new_empty();
             if hit_rec.mat.clone().expect("shouldn't crash rite").scatter(
                 ray,
-                &mut hit_rec,
+                &hit_rec,
                 &mut attenuation,
                 &mut scattered_ray,
             ) {
