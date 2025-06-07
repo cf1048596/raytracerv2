@@ -7,7 +7,6 @@ use crate::{
     interval::Interval,
     ray::{Scatter, SetFaceNormal},
     vec3::{dot, Point3},
-    Vec3,
 };
 
 pub struct Sphere {

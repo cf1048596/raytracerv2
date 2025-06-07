@@ -1,13 +1,9 @@
-use std::{
-    fmt::{write, Pointer},
-    rc::Rc,
-    sync::Arc,
-};
+use std::rc::Rc;
 
 use crate::{
     color::Color,
-    interval::{self, Interval},
-    vec3::{dot, random_unit_vector, reflect, unit_vector, Point3},
+    interval::Interval,
+    vec3::{dot, Point3},
     Vec3,
 };
 

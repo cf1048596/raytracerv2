@@ -10,15 +10,13 @@ mod vec3;
 extern crate sdl2;
 use camera::Camera;
 use color::Color;
-use helper::{random_f64, random_f64_range};
 use material::{Dielectric, Lambertian, Metal};
-use ray::{HittableList, Scatter};
+use ray::HittableList;
 use sdl2::pixels::PixelFormatEnum;
 use sphere::Sphere;
-use std::env::args;
 use std::error::Error;
 use std::io::{BufRead, BufReader, Write};
-use std::net::{TcpListener, TcpStream};
+use std::net::TcpStream;
 use std::rc::Rc;
 use std::sync::mpsc::channel;
 use std::thread;
@@ -30,6 +28,7 @@ const IMG_HEIGHT: u32 = 112;
 const PIXEL_SCALE: u32 = 5;
 const MOVEMENT_SCALE: f64 = 0.5_f64;
 
+//probably should change to udp rather than tcp
 fn main() -> Result<(), Box<dyn Error>> {
     let args: Vec<String> = std::env::args().collect();
     let port: String = args[1].to_owned().trim().to_string();
@@ -45,7 +44,6 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     thread::spawn(move || {
         if let Ok(mut stream) = TcpStream::connect("127.0.0.1:".to_owned() + port.as_str()) {
-
             stream.set_nonblocking(true).unwrap();
             println!("connected successfully to server");
             let mut reader = BufReader::new(stream.try_clone().unwrap());
@@ -55,7 +53,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                     println!("sending to server: {}, {}, {}", x, y, z);
                     let msg = format!("CAMERA {} {} {}\n", x, y, z);
                     stream.write_all(msg.as_bytes()).unwrap();
-                } 
+                }
 
                 // receive server update
                 // this is really ugly and bad but whatever i wanted uniformity between by channels
@@ -75,8 +73,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                                 tx_server.send((x, y, z)).unwrap();
                             }
                         }
-                    } 
-                } 
+                    }
+                }
             }
         }
     });
@@ -185,11 +183,15 @@ fn main() -> Result<(), Box<dyn Error>> {
                         _ => {}
                     }
                     rerender_flag = true;
-                    match tx_pos_update
-                        .send((cam.lookfrom.x(), cam.lookfrom.y(), cam.lookfrom.z())) {
-                            Ok(_) => {println!("channel worked");},
-                            Err(_) => {println!("channel failed");},
+                    match tx_pos_update.send((cam.lookfrom.x(), cam.lookfrom.y(), cam.lookfrom.z()))
+                    {
+                        Ok(_) => {
+                            println!("channel worked");
                         }
+                        Err(_) => {
+                            println!("channel failed");
+                        }
+                    }
                 }
                 sdl2::event::Event::MouseMotion { xrel, yrel, .. } => {
                     let sensitivity = 0.01; //adjust this for faster/slower rotation
@@ -203,17 +205,17 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
 
         if let Ok((x, y, z)) = rx_server.try_recv() {
-            rerender_flag=true;
+            rerender_flag = true;
             println!("other player coords: {}, {}, {}", x, y, z);
             if !other_player_set {
                 other_player_set = true;
 
-            let player_material = Rc::new(Metal::new(Color::new(0.01, 0.2, 0.3), 0.0));
-            world.add(Rc::new(Sphere::new(
-                Point3::new(x, y, z),
-                0.5,
-                player_material,
-            )));
+                let player_material = Rc::new(Metal::new(Color::new(0.01, 0.2, 0.3), 0.0));
+                world.add(Rc::new(Sphere::new(
+                    Point3::new(x, y, z),
+                    0.5,
+                    player_material,
+                )));
             } else {
                 world.drop_last();
                 let player_material = Rc::new(Metal::new(Color::new(0.01, 0.2, 0.3), 0.0));
