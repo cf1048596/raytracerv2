@@ -1,18 +1,10 @@
 use crate::helper::INFINITY;
 use crate::{
     color::{write_color, Color},
-    helper::{deg_to_rad, random_f64, random_f64_range},
+    helper::{deg_to_rad, random_f64},
     interval::Interval,
-    ray::{HitRecord, Hittable, Ray, Scatter},
-    vec3::{
-        self, cross, random_in_unit_disk, random_on_hemisphere, random_unit_vector, unit_vector,
-        Point3, Vec3,
-    },
-};
-use std::{
-    io::{self, Write},
-    rc::Rc,
-    result,
+    ray::{HitRecord, Hittable, Ray},
+    vec3::{cross, random_in_unit_disk, unit_vector, Point3, Vec3},
 };
 
 pub struct Camera {

@@ -2,7 +2,7 @@ use crate::{
     color::Color,
     helper::random_f64,
     ray::{HitRecord, Ray, Scatter},
-    vec3::{dot, random_unit_vector, reflect, refract, unit_vector, Vec3},
+    vec3::{dot, random_unit_vector, reflect, refract, unit_vector},
 };
 
 pub struct Lambertian {
